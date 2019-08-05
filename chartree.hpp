@@ -11,10 +11,14 @@
 
 template<typename C,typename D>
 class CharTree {
+public:
+	typedef void (*callback_1)(const std::basic_string<C>& path,CharTree& tree,CharTree& root,void *udata);
+
+protected:
 	D			*data = nullptr;
 	std::map<C,CharTree*>	nodes;
 
-	void traverse(const std::basic_string<C>& path,void (*callback)(const std::basic_string<C>& path,CharTree& tree,CharTree& root,void *udata),CharTree& root,void *udata);
+	void traverse(const std::basic_string<C>& path,callback_1 callback,CharTree& root,void *udata);
 
 public:	CharTree() {}
 	~CharTree() {}
@@ -22,7 +26,7 @@ public:	CharTree() {}
 	CharTree& put(const C *path,D *data);
 	D *get(const C *path) const;
 	D *get() { return data; }
-	CharTree& traverse(void (*callback)(const std::basic_string<C>& path,CharTree& tree,CharTree& root,void *udata),void *udata);
+	CharTree& traverse(callback_1 callback,void *udata);
 };
 
 template<typename C,typename D>
