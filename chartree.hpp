@@ -13,12 +13,14 @@ template<typename C,typename D>
 class CharTree {
 public:
 	typedef void (*callback_1)(const std::basic_string<C>& path,CharTree& tree,CharTree& root,void *udata);
+	typedef void (*callback_2)(const std::basic_string<C>& prefix,const std::basic_string<C>& suffix,CharTree& tree,CharTree& root,void *udata);
 
 protected:
 	D			*data = nullptr;
 	std::map<C,CharTree*>	nodes;
 
 	void traverse(const std::basic_string<C>& path,callback_1 callback,CharTree& root,void *udata);
+	void optimize(const std::basic_string<C>& path,size_t tailcount,callback_2 callback,CharTree& root,void *udata);
 
 public:	CharTree() {}
 	~CharTree() {}
@@ -27,6 +29,7 @@ public:	CharTree() {}
 	D *get(const C *path) const;
 	D *get() { return data; }
 	CharTree& traverse(callback_1 callback,void *udata);
+	CharTree& optimize(callback_2 callback,void *udata);
 };
 
 template<typename C,typename D>
@@ -81,7 +84,7 @@ CharTree<C,D>::traverse(void (*callback)(const std::basic_string<C>& path,CharTr
 
 template<typename C,typename D>
 void
-CharTree<C,D>::traverse(const std::basic_string<C>& path,void (*callback)(const std::basic_string<C>& path,CharTree& tree,CharTree& root,void *udata),CharTree& root,void *udata) {
+CharTree<C,D>::traverse(const std::basic_string<C>& path,callback_1 callback,CharTree& root,void *udata) {
 
 	for ( auto& pair : nodes ) {
 		const C ch = pair.first;
@@ -91,6 +94,42 @@ CharTree<C,D>::traverse(const std::basic_string<C>& path,void (*callback)(const 
 
 		callback(tpath,*np,root,udata);
 		np->traverse(tpath,callback,root,udata);
+	}
+}
+
+template<typename C,typename D>
+CharTree<C,D>&
+CharTree<C,D>::optimize(callback_2 callback,void *udata) {
+	std::basic_string<C> path;
+
+	optimize(path,0u,callback,*this,udata);
+	return *this;
+}
+
+template<typename C,typename D>
+void
+CharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,callback_2 callback,CharTree& root,void *udata) {
+
+	if ( nodes.size() > 1 ) {
+		std::basic_string<C> suffix;
+
+		callback(path,suffix,*this,root,udata);	// Call with common prefix 
+	}
+
+	for ( auto& pair : nodes ) {
+		const C ch = pair.first;
+		CharTree<C,D> *np = pair.second;
+		std::basic_string<C> tpath(path);
+		tpath += ch;
+		size_t tc = nodes.size() == 1 && !this->data ? tailcount + 1 : 1;
+
+		if ( np->data ) {
+			std::basic_string prefix(tpath.substr(0,tpath.size()-tc));
+			std::basic_string suffix(tpath.substr(tpath.size()-tc));
+
+			callback(prefix,suffix,*np,root,udata);
+		}
+		np->optimize(tpath,tc,callback,root,udata);
 	}
 }
 

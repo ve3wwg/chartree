@@ -53,6 +53,16 @@ main(int argc,char **argv) {
 
 	tree.traverse(dumpit,nullptr);
 	
+	puts("Optimized:");
+
+	auto dump2 = [](const std::string& prefix,const std::string& suffix,CharTree<char,const char>& tree,CharTree<char,const char>& root,void *udata) {
+		const char *datap = tree.get();
+
+		printf("path = '%s'.'%s' -> '%s'\n",prefix.c_str(),suffix.c_str(),datap ? datap : "<empty>");
+	};
+
+	tree.optimize(dump2,nullptr);
+
 	return 0;
 }
 
