@@ -19,7 +19,7 @@
 
 int
 main(int argc,char **argv) {
-	CharTree<char,const char> tree;
+	CharTree<char,char> tree;
 	char buf[4096];
 	std::string temp;
 	std::vector<std::string> svec;
@@ -30,12 +30,13 @@ main(int argc,char **argv) {
 
 	while ( !std::cin.eof() ) {
 		std::cin.getline(buf,sizeof buf);
+
+		if ( !*buf )
+			continue;
+
 		std::string line(buf);
 		tree.put(line.c_str(),strdup(line.c_str()));
 		temp = line;
-
-		if ( line.empty() )
-			continue;
 
 		svec.push_back(buf);
 		const char *vp = tree.get(line.c_str());
@@ -55,7 +56,7 @@ main(int argc,char **argv) {
 	// Traversal test:
 	//////////////////////////////////////////////////////////////
 
-	auto dumpit = [](const std::string& path,CharTree<char,const char>& tree,CharTree<char,const char>& root,void *udata) {
+	auto dumpit = [](const std::string& path,CharTree<char,char>& tree,CharTree<char,char>& root,void *udata) {
 		const char *datap = tree.get();
 
 		if ( datap != nullptr )
@@ -69,7 +70,7 @@ main(int argc,char **argv) {
 	// Optimized traversal test:
 	//////////////////////////////////////////////////////////////
 
-	auto dump2 = [](const CharTree<char,const char>::seglist_t& prefix,const std::string& suffix,CharTree<char,const char>& tree,CharTree<char,const char>& root,void *udata) {
+	auto dump2 = [](const CharTree<char,char>::seglist_t& prefix,const std::string& suffix,CharTree<char,char>& tree,CharTree<char,char>& root,void *udata) {
 		const char *datap = tree.get();
 
 		for ( auto& comp : prefix )
@@ -85,7 +86,7 @@ main(int argc,char **argv) {
 	// Destruct tree's user data:
 	//////////////////////////////////////////////////////////////
 
-	tree.clear([](const char *data){ delete data; });
+	tree.clear([](char *data){ free(data); });
 
 	return 0;
 }

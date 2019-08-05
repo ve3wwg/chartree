@@ -144,12 +144,14 @@ CharTree<C,D>&
 CharTree<C,D>::clear(callback_3 callback) {
 	
 	if ( callback ) {
-		for ( auto& pair : nodes )
-			pair.second->clear(callback);
 		if ( this->data ) {
 			callback(this->data);
 			this->data = nullptr;
 		}
+	}
+	for ( auto& pair : nodes ) {
+		pair.second->clear(callback);
+		delete pair.second;
 	}
 	nodes.clear();
 	return *this;
