@@ -24,9 +24,12 @@ main(int argc,char **argv) {
 	std::string temp;
 	std::vector<std::string> svec;
 	
+	//////////////////////////////////////////////////////////////
+	// Load tree from test data
+	//////////////////////////////////////////////////////////////
+
 	while ( !std::cin.eof() ) {
 		std::cin.getline(buf,sizeof buf);
-		// printf("Got line '%s'\n",buf);
 		std::string line(buf);
 		tree.put(line.c_str(),strdup(line.c_str()));
 		temp = line;
@@ -39,10 +42,18 @@ main(int argc,char **argv) {
 		assert(!strcmp(vp,line.c_str()));
 	}			
 
+	//////////////////////////////////////////////////////////////
+	// Validate loaded tree:
+	//////////////////////////////////////////////////////////////
+
 	for ( auto& path : svec ) {
 		const char *vp = tree.get(path.c_str());
 		assert(!strcmp(vp,path.c_str()));
 	}
+
+	//////////////////////////////////////////////////////////////
+	// Traversal test:
+	//////////////////////////////////////////////////////////////
 
 	auto dumpit = [](const std::string& path,CharTree<char,const char>& tree,CharTree<char,const char>& root,void *udata) {
 		const char *datap = tree.get();
@@ -51,17 +62,30 @@ main(int argc,char **argv) {
 			printf("path = '%s' -> '%s'\n",path.c_str(),datap ? datap : "<empty>");
 	};
 
+	puts("TRAVERSE:");
 	tree.traverse(dumpit,nullptr);
-	
-	puts("Optimized:");
 
-	auto dump2 = [](const std::string& prefix,const std::string& suffix,CharTree<char,const char>& tree,CharTree<char,const char>& root,void *udata) {
+	//////////////////////////////////////////////////////////////
+	// Optimized traversal test:
+	//////////////////////////////////////////////////////////////
+
+	auto dump2 = [](const CharTree<char,const char>::seglist_t& prefix,const std::string& suffix,CharTree<char,const char>& tree,CharTree<char,const char>& root,void *udata) {
 		const char *datap = tree.get();
 
-		printf("path = '%s'.'%s' -> '%s'\n",prefix.c_str(),suffix.c_str(),datap ? datap : "<empty>");
+		for ( auto& comp : prefix )
+			printf(" '%s'",comp.c_str());
+
+		printf(" . '%s' -> '%s'\n",suffix.c_str(),datap ? datap : "<empty>");
 	};
 
+	puts("OPTIMIZED:");
 	tree.optimize(dump2,nullptr);
+
+	//////////////////////////////////////////////////////////////
+	// Destruct tree's user data:
+	//////////////////////////////////////////////////////////////
+
+	tree.clear([](const char *data){ delete data; });
 
 	return 0;
 }

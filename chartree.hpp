@@ -7,20 +7,24 @@
 #define CHARTREE_HPP
 
 #include <map>
+#include <list>
 #include <string>
 
 template<typename C,typename D>
 class CharTree {
 public:
+	typedef std::list<std::basic_string<C>> seglist_t;
 	typedef void (*callback_1)(const std::basic_string<C>& path,CharTree& tree,CharTree& root,void *udata);
-	typedef void (*callback_2)(const std::basic_string<C>& prefix,const std::basic_string<C>& suffix,CharTree& tree,CharTree& root,void *udata);
+	typedef void (*callback_2)(const seglist_t& prefix,const std::basic_string<C>& suffix,CharTree& tree,CharTree& root,void *udata);
+	typedef void (*callback_3)(D *data);
 
 protected:
+
 	D			*data = nullptr;
 	std::map<C,CharTree*>	nodes;
 
 	void traverse(const std::basic_string<C>& path,callback_1 callback,CharTree& root,void *udata);
-	void optimize(const std::basic_string<C>& path,size_t tailcount,callback_2 callback,CharTree& root,void *udata);
+	void optimize(const std::basic_string<C>& path,size_t tailcount,seglist_t& seglist,callback_2 callback,CharTree& root,void *udata);
 
 public:	CharTree() {}
 	~CharTree() {}
@@ -30,6 +34,7 @@ public:	CharTree() {}
 	D *get() { return data; }
 	CharTree& traverse(callback_1 callback,void *udata);
 	CharTree& optimize(callback_2 callback,void *udata);
+	CharTree& clear(callback_3 callback=nullptr);
 };
 
 template<typename C,typename D>
@@ -101,19 +106,21 @@ template<typename C,typename D>
 CharTree<C,D>&
 CharTree<C,D>::optimize(callback_2 callback,void *udata) {
 	std::basic_string<C> path;
+	seglist_t seglist;
 
-	optimize(path,0u,callback,*this,udata);
+	optimize(path,0u,seglist,callback,*this,udata);
 	return *this;
 }
 
 template<typename C,typename D>
 void
-CharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,callback_2 callback,CharTree& root,void *udata) {
+CharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,seglist_t& seglist,callback_2 callback,CharTree& root,void *udata) {
+	seglist_t prefix(seglist);
 
-	if ( nodes.size() > 1 ) {
+	if ( nodes.size() > 1 && !path.empty() ) {
 		std::basic_string<C> suffix;
 
-		callback(path,suffix,*this,root,udata);	// Call with common prefix 
+		prefix.push_back(path.substr(path.size()-tailcount));
 	}
 
 	for ( auto& pair : nodes ) {
@@ -124,13 +131,28 @@ CharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,callba
 		size_t tc = nodes.size() == 1 && !this->data ? tailcount + 1 : 1;
 
 		if ( np->data ) {
-			std::basic_string prefix(tpath.substr(0,tpath.size()-tc));
 			std::basic_string suffix(tpath.substr(tpath.size()-tc));
 
 			callback(prefix,suffix,*np,root,udata);
 		}
-		np->optimize(tpath,tc,callback,root,udata);
+		np->optimize(tpath,tc,prefix,callback,root,udata);
 	}
+}
+
+template<typename C,typename D>
+CharTree<C,D>&
+CharTree<C,D>::clear(callback_3 callback) {
+	
+	if ( callback ) {
+		for ( auto& pair : nodes )
+			pair.second->clear(callback);
+		if ( this->data ) {
+			callback(this->data);
+			this->data = nullptr;
+		}
+	}
+	nodes.clear();
+	return *this;
 }
 
 #endif // CHARTREE_HPP
