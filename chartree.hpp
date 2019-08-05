@@ -131,7 +131,7 @@ CharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,seglis
 		size_t tc = nodes.size() == 1 && !this->data ? tailcount + 1 : 1;
 
 		if ( np->data ) {
-			std::basic_string suffix(tpath.substr(tpath.size()-tc));
+			std::basic_string<C> suffix(tpath.substr(tpath.size()-tc));
 
 			callback(prefix,suffix,*np,root,udata);
 		}
