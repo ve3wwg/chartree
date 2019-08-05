@@ -19,7 +19,7 @@
 
 int
 main(int argc,char **argv) {
-	CharTree<char,char> tree;
+	CharTree<char,char> tree([](char *udata){free(udata);});
 	char buf[4096];
 	std::string temp;
 	std::vector<std::string> svec;
@@ -81,12 +81,6 @@ main(int argc,char **argv) {
 
 	puts("OPTIMIZED:");
 	tree.optimize(dump2,nullptr);
-
-	//////////////////////////////////////////////////////////////
-	// Destruct tree's user data:
-	//////////////////////////////////////////////////////////////
-
-	tree.clear([](char *data){ free(data); });
 
 	return 0;
 }

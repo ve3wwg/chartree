@@ -19,22 +19,22 @@ public:
 	typedef void (*callback_3)(D *data);
 
 protected:
-
 	D			*data = nullptr;
 	std::map<C,CharTree*>	nodes;
+	callback_3		udata_free;
 
 	void traverse(const std::basic_string<C>& path,callback_1 callback,CharTree& root,void *udata);
 	void optimize(const std::basic_string<C>& path,size_t tailcount,seglist_t& seglist,callback_2 callback,CharTree& root,void *udata);
 
-public:	CharTree() {}
-	~CharTree() {}
+public:	CharTree(callback_3 udata_free) : udata_free(udata_free) {}
+	~CharTree() { clear(); }
 	
 	CharTree& put(const C *path,D *data);
 	D *get(const C *path) const;
 	D *get() { return data; }
 	CharTree& traverse(callback_1 callback,void *udata);
 	CharTree& optimize(callback_2 callback,void *udata);
-	CharTree& clear(callback_3 callback=nullptr);
+	CharTree& clear();
 };
 
 template<typename C,typename D>
@@ -49,7 +49,7 @@ CharTree<C,D>::put(const C *path,D *datap) {
 	while ( (ch = *path++) != C(0) ) {
 		auto it = np->nodes.find(ch);
 		if ( it == np->nodes.end() ) {
-			CharTree *p = new CharTree();
+			CharTree *p = new CharTree(udata_free);
 			np->nodes[ch] = p;
 			np = p;
 		} else	{
@@ -141,16 +141,16 @@ CharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,seglis
 
 template<typename C,typename D>
 CharTree<C,D>&
-CharTree<C,D>::clear(callback_3 callback) {
+CharTree<C,D>::clear() {
 	
-	if ( callback ) {
+	if ( udata_free ) {
 		if ( this->data ) {
-			callback(this->data);
+			udata_free(this->data);
 			this->data = nullptr;
 		}
 	}
 	for ( auto& pair : nodes ) {
-		pair.second->clear(callback);
+		pair.second->clear();
 		delete pair.second;
 	}
 	nodes.clear();
