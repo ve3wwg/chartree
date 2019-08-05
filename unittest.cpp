@@ -44,14 +44,14 @@ main(int argc,char **argv) {
 		assert(!strcmp(vp,path.c_str()));
 	}
 
-	auto dumpit = [](const char *path,CharTree<char,const char>& tree,CharTree<char,const char>& root) {
+	auto dumpit = [](const char *path,CharTree<char,const char>& tree,CharTree<char,const char>& root,void *udata) {
 		const char *datap = tree.get();
 
 		if ( datap != nullptr )
 			printf("path = '%s' -> '%s'\n",path,datap ? datap : "<empty>");
 	};
 
-	tree.traverse(dumpit);
+	tree.traverse(dumpit,nullptr);
 	
 	return 0;
 }

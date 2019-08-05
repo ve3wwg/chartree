@@ -14,7 +14,7 @@ class CharTree {
 	D			*data = nullptr;
 	std::map<C,CharTree*>	nodes;
 
-	void traverse(const std::basic_string<C>& path,void (*func)(const C *path,CharTree& tree,CharTree& root),CharTree& root);
+	void traverse(const std::basic_string<C>& path,void (*callback)(const C *path,CharTree& tree,CharTree& root,void *udata),CharTree& root,void *udata);
 
 public:	CharTree() {}
 	~CharTree() {}
@@ -22,7 +22,7 @@ public:	CharTree() {}
 	CharTree& put(const C *path,D *data);
 	D *get(const C *path) const;
 	D *get() { return data; }
-	CharTree& traverse(void (*func)(const C *path,CharTree& tree,CharTree& root));
+	CharTree& traverse(void (*callback)(const C *path,CharTree& tree,CharTree& root,void *udata),void *udata);
 };
 
 template<typename C,typename D>
@@ -68,16 +68,16 @@ CharTree<C,D>::get(const C *path) const {
 
 template<typename C,typename D>
 CharTree<C,D>&
-CharTree<C,D>::traverse(void (*func)(const C *path,CharTree& tree,CharTree& root)) {
+CharTree<C,D>::traverse(void (*callback)(const C *path,CharTree& tree,CharTree& root,void *udata),void *udata) {
 	std::basic_string<C> path;
 
-	traverse(path,func,*this);
+	traverse(path,callback,*this,udata);
 	return *this;
 }
 
 template<typename C,typename D>
 void
-CharTree<C,D>::traverse(const std::basic_string<C>& path,void (*func)(const C *path,CharTree& tree,CharTree& root),CharTree& root) {
+CharTree<C,D>::traverse(const std::basic_string<C>& path,void (*callback)(const C *path,CharTree& tree,CharTree& root,void *udata),CharTree& root,void *udata) {
 
 	for ( auto& pair : nodes ) {
 		const C ch = pair.first;
@@ -85,8 +85,8 @@ CharTree<C,D>::traverse(const std::basic_string<C>& path,void (*func)(const C *p
 		std::basic_string<C> tpath(path);
 		tpath += ch;
 
-		func(tpath.c_str(),*np,root);
-		np->traverse(tpath,func,root);
+		callback(tpath.c_str(),*np,root,udata);
+		np->traverse(tpath,callback,root,udata);
 	}
 }
 
