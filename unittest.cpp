@@ -19,7 +19,7 @@
 
 int
 main(int argc,char **argv) {
-	CharTree<char,char> tree([](char *udata){free(udata);});
+	CharTree<char> tree([](char *udata){free(udata);});
 	char buf[4096];
 	std::string temp;
 	std::vector<std::string> svec;
@@ -56,7 +56,7 @@ main(int argc,char **argv) {
 	// Traversal test:
 	//////////////////////////////////////////////////////////////
 
-	auto dumpit = [](const std::string& path,CharTree<char,char>& tree,CharTree<char,char>& root,void *udata) {
+	auto dumpit = [](const std::string& path,CharTree<char>& tree,CharTree<char>& root,void *udata) {
 		const char *datap = tree.get();
 
 		if ( datap != nullptr )
@@ -70,7 +70,7 @@ main(int argc,char **argv) {
 	// Optimized traversal test:
 	//////////////////////////////////////////////////////////////
 
-	auto dump2 = [](const CharTree<char,char>::seglist_t& prefix,const std::string& suffix,CharTree<char,char>& tree,CharTree<char,char>& root,void *udata) {
+	auto dump2 = [](const CharTree<char>::seglist_t& prefix,const std::string& suffix,CharTree<char>& tree,CharTree<char>& root,void *udata) {
 		const char *datap = tree.get();
 
 		for ( auto& comp : prefix )

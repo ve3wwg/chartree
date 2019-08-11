@@ -10,38 +10,53 @@
 #include <list>
 #include <string>
 
+//////////////////////////////////////////////////////////////////////
+// Typical Usage:
+//
+//	See bottom of this file for CharTree<typename D> which
+//	assumes the Key type is 'char'.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// Tree Class:
+//
+//	typename C	Key type (char or wide char type)
+//	typename D	Data type (data is allocated as D*)
+//
+//////////////////////////////////////////////////////////////////////
+
 template<typename C,typename D>
-class CharTree {
+class BasicCharTree {
 public:
 	typedef std::list<std::basic_string<C>> seglist_t;
-	typedef void (*callback_1)(const std::basic_string<C>& path,CharTree& tree,CharTree& root,void *udata);
-	typedef void (*callback_2)(const seglist_t& prefix,const std::basic_string<C>& suffix,CharTree& tree,CharTree& root,void *udata);
+	typedef void (*callback_1)(const std::basic_string<C>& path,BasicCharTree& tree,BasicCharTree& root,void *udata);
+	typedef void (*callback_2)(const seglist_t& prefix,const std::basic_string<C>& suffix,BasicCharTree& tree,BasicCharTree& root,void *udata);
 	typedef void (*callback_3)(D *data);
 
 protected:
 	D			*data = nullptr;
-	std::map<C,CharTree*>	nodes;
+	std::map<C,BasicCharTree*>	nodes;
 	callback_3		udata_free;
 
-	void traverse(const std::basic_string<C>& path,callback_1 callback,CharTree& root,void *udata);
-	void optimize(const std::basic_string<C>& path,size_t tailcount,seglist_t& seglist,callback_2 callback,CharTree& root,void *udata);
+	void traverse(const std::basic_string<C>& path,callback_1 callback,BasicCharTree& root,void *udata);
+	void optimize(const std::basic_string<C>& path,size_t tailcount,seglist_t& seglist,callback_2 callback,BasicCharTree& root,void *udata);
 
-public:	CharTree(callback_3 udata_free) : udata_free(udata_free) {}
-	~CharTree() { clear(); }
+public:	BasicCharTree(callback_3 udata_free) : udata_free(udata_free) {}
+	~BasicCharTree() { clear(); }
 	
-	CharTree& put(const C *path,D *data);
+	BasicCharTree& put(const C *path,D *data);
 	D *get(const C *path) const;
 	D *get() { return data; }
-	CharTree& traverse(callback_1 callback,void *udata);
-	CharTree& optimize(callback_2 callback,void *udata);
-	CharTree& clear();
+	BasicCharTree& traverse(callback_1 callback,void *udata);
+	BasicCharTree& optimize(callback_2 callback,void *udata);
+	BasicCharTree& clear();
 };
 
 template<typename C,typename D>
-CharTree<C,D>&
-CharTree<C,D>::put(const C *path,D *datap) {
+BasicCharTree<C,D>&
+BasicCharTree<C,D>::put(const C *path,D *datap) {
 	C ch;
-	CharTree *np = this;
+	BasicCharTree *np = this;
 	
 	if ( !path || !*path )
 		return *this;
@@ -49,7 +64,7 @@ CharTree<C,D>::put(const C *path,D *datap) {
 	while ( (ch = *path++) != C(0) ) {
 		auto it = np->nodes.find(ch);
 		if ( it == np->nodes.end() ) {
-			CharTree *p = new CharTree(udata_free);
+			BasicCharTree *p = new BasicCharTree(udata_free);
 			np->nodes[ch] = p;
 			np = p;
 		} else	{
@@ -62,9 +77,9 @@ CharTree<C,D>::put(const C *path,D *datap) {
 
 template<typename C,typename D>
 D *
-CharTree<C,D>::get(const C *path) const {
+BasicCharTree<C,D>::get(const C *path) const {
 	C ch;
-	const CharTree *np = this;
+	const BasicCharTree *np = this;
 	
 	if ( !path || !*path )
 		return this->data;
@@ -79,8 +94,8 @@ CharTree<C,D>::get(const C *path) const {
 }
 
 template<typename C,typename D>
-CharTree<C,D>&
-CharTree<C,D>::traverse(void (*callback)(const std::basic_string<C>& path,CharTree& tree,CharTree& root,void *udata),void *udata) {
+BasicCharTree<C,D>&
+BasicCharTree<C,D>::traverse(void (*callback)(const std::basic_string<C>& path,BasicCharTree& tree,BasicCharTree& root,void *udata),void *udata) {
 	std::basic_string<C> path;
 
 	traverse(path,callback,*this,udata);
@@ -89,11 +104,11 @@ CharTree<C,D>::traverse(void (*callback)(const std::basic_string<C>& path,CharTr
 
 template<typename C,typename D>
 void
-CharTree<C,D>::traverse(const std::basic_string<C>& path,callback_1 callback,CharTree& root,void *udata) {
+BasicCharTree<C,D>::traverse(const std::basic_string<C>& path,callback_1 callback,BasicCharTree& root,void *udata) {
 
 	for ( auto& pair : nodes ) {
 		const C ch = pair.first;
-		CharTree<C,D> *np = pair.second;
+		BasicCharTree<C,D> *np = pair.second;
 		std::basic_string<C> tpath(path);
 		tpath += ch;
 
@@ -103,8 +118,8 @@ CharTree<C,D>::traverse(const std::basic_string<C>& path,callback_1 callback,Cha
 }
 
 template<typename C,typename D>
-CharTree<C,D>&
-CharTree<C,D>::optimize(callback_2 callback,void *udata) {
+BasicCharTree<C,D>&
+BasicCharTree<C,D>::optimize(callback_2 callback,void *udata) {
 	std::basic_string<C> path;
 	seglist_t seglist;
 
@@ -114,7 +129,7 @@ CharTree<C,D>::optimize(callback_2 callback,void *udata) {
 
 template<typename C,typename D>
 void
-CharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,seglist_t& seglist,callback_2 callback,CharTree& root,void *udata) {
+BasicCharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,seglist_t& seglist,callback_2 callback,BasicCharTree& root,void *udata) {
 	seglist_t prefix(seglist);
 
 	if ( nodes.size() > 1 && !path.empty() ) {
@@ -125,7 +140,7 @@ CharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,seglis
 
 	for ( auto& pair : nodes ) {
 		const C ch = pair.first;
-		CharTree<C,D> *np = pair.second;
+		BasicCharTree<C,D> *np = pair.second;
 		std::basic_string<C> tpath(path);
 		tpath += ch;
 		size_t tc = nodes.size() == 1 && !this->data ? tailcount + 1 : 1;
@@ -140,8 +155,8 @@ CharTree<C,D>::optimize(const std::basic_string<C>& path,size_t tailcount,seglis
 }
 
 template<typename C,typename D>
-CharTree<C,D>&
-CharTree<C,D>::clear() {
+BasicCharTree<C,D>&
+BasicCharTree<C,D>::clear() {
 	
 	if ( udata_free ) {
 		if ( this->data ) {
@@ -156,6 +171,16 @@ CharTree<C,D>::clear() {
 	nodes.clear();
 	return *this;
 }
+
+//////////////////////////////////////////////////////////////////////
+// Typical Usage where Node key is type 'char':
+//
+//	typename D	Data type (data is allocated as D*)
+//
+//////////////////////////////////////////////////////////////////////
+
+template<typename D>
+using CharTree = BasicCharTree<char,D>;
 
 #endif // CHARTREE_HPP
 
